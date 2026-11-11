@@ -6,8 +6,11 @@
 
 - [结题报告](结题报告.md)
 - [正式实验轨迹](outputs/final_experiment_v2/traces)、[统计表](outputs/final_experiment_v2/tables)、[实验图](outputs/final_experiment_v2/figures)
+- [缓存计时记录](outputs/final_experiment_v2/latency/pairs.jsonl)
 
 4 道题各跑 2 次，一共记录了 24 次模型调用。只比较同一次做题过程中的相邻调用，整批输入约有 **59.85%** 可以理论复用。另做的缓存模拟允许不同题目共用缓存，容量设为 2048 Token 时，模拟命中率为 **87.90%**。
+
+实测同一份输入在复用开头时，首个输出 Token 的中位等待时间从 **461.0 毫秒**降到 **91.9 毫秒**。这组数据来自 64 对本地计时。
 
 ## 目录
 
@@ -46,6 +49,24 @@ $RunDir = "outputs/run_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 ```
 
 轨迹文件按次追加，重新采集时请使用新的输出目录。正式批次使用 Ollama 0.40.4，实际模型生成受运行环境影响，重新采集可能出现不同的工具调用或回答。
+
+## 重跑缓存计时实验
+
+下面的命令使用 Ollama 自带的 llama-server 和 CUDA 12 后端。先退出占用显存的本地模型，再从项目目录执行。程序会自行启动和关闭测试服务。
+
+```powershell
+$Py = '.\.venv\Scripts\python.exe'
+$Bench = @(
+    '--server-exe', 'Ollama/lib/ollama/llama-server.exe',
+    '--backend-library', 'Ollama/lib/ollama/cuda_v12/ggml-cuda.dll',
+    '--model', 'models/Qwen3-4B-Q4_K_M.gguf',
+    '--traces', 'outputs/final_experiment_v2/traces/calls.jsonl',
+    '--output', "outputs/latency_$(Get-Date -Format 'yyyyMMdd_HHmmss').jsonl",
+    '--repeats', '4',
+    '--port', '18084'
+)
+& $Py -m prefixcache_lab.benchmark_latency @Bench
+```
 
 ## 怎么看实验文件
 
