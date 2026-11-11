@@ -1,0 +1,15 @@
+{
+  "backend": "local_ollama",
+  "model": "qwen3-local:4b",
+  "model_type": "oai",
+  "model_server": "http://127.0.0.1:11434/v1",
+  "api_key": "EMPTY",
+  "tokenizer": "qwen-agent-builtin",
+  "repetitions": 2,
+  "generate_cfg": {
+    "temperature": 0.0,
+    "top_p": 0.8,
+    "thought_in_content": false,
+    "parallel_function_calls": false
+  }
+}

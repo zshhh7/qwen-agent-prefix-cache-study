@@ -1,0 +1,6 @@
+﻿block_type,occurrences,unique_blocks,reuse_count,reuse_rate,mean_reuse_interval_calls,max_reuse_interval_calls,mean_lifetime_calls,max_lifetime_calls,mean_block_tokens
+conversation_history,24,8,16,0.6666666666666666,6.25,12,13.5,14,54.416666666666664
+current_query,24,4,20,0.8333333333333334,2.8,10,15.0,15,59.0
+system_prompt,24,1,23,0.9583333333333334,1.0,1,24.0,24,135.0
+tool_description,24,1,23,0.9583333333333334,1.0,1,24.0,24,185.0
+tool_result,24,8,16,0.6666666666666666,6.25,12,13.5,14,58.25

@@ -1,0 +1,4 @@
+﻿call_index,total_prompt_tokens,shared_prefix_tokens,reuse_ratio
+1,375.0,0.0,0.0
+2,488.0,375.0,0.7684458497625376
+3,579.0,488.0,0.8428588565450454

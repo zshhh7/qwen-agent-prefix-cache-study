@@ -1,0 +1,6 @@
+qwen-agent[python_executor] @ git+https://github.com/QwenLM/Qwen-Agent.git@31a4d36d123688581a9e9744427272b33ce940e0
+soundfile>=0.13
+tqdm>=4.67
+matplotlib>=3.8
+pandas>=2.1
+pytest>=8.0
