@@ -1,16 +1,16 @@
 # 面向智能体的Prompt结构与KV Cache复用特征分析
 
-给本地 Qwen 模型一道长度题，让它先换算单位，再用计算器求总长。记录模型每一步收到的内容，看看后续调用有多少输入和前一次的开头一样。
+本项目基于 Qwen-Agent 采集多轮工具调用轨迹，分析 Prompt 的组成及相邻请求的公共前缀。实验覆盖轨迹统计、不同容量下的 LRU 缓存模拟，以及本地推理的前缀复用对照测试。
 
-## 结题成果
+## 技术报告与实验数据
 
 - [结题报告](结题报告.md)
 - [正式实验轨迹](outputs/final_experiment_v2/traces)、[统计表](outputs/final_experiment_v2/tables)、[实验图](outputs/final_experiment_v2/figures)
 - [缓存计时记录](outputs/final_experiment_v2/latency/pairs.jsonl)
 
-4 道题各跑 2 次，一共记录了 24 次模型调用。只比较同一次做题过程中的相邻调用，整批输入约有 **59.85%** 可以理论复用。另做的缓存模拟允许不同题目共用缓存，容量设为 2048 Token 时，模拟命中率为 **87.90%**。
+4 个同类任务各执行 2 次，共采集 24 条模型调用轨迹。同次运行内的相邻请求共有 6,904 个公共前缀 Token，占全部规范化输入的 **59.85%**。在允许跨任务保留缓存的 LRU 模拟中，2,048 Token 容量下的 Token 命中率为 **87.90%**。
 
-实测同一份输入在复用开头时，首个输出 Token 的中位等待时间从 **461.0 毫秒**降到 **91.9 毫秒**。这组数据来自 64 对本地计时。
+在模型已加载、请求串行执行的条件下，64 对本地测量中，启用前缀复用后首 Token 延迟的中位数由 **461.0 毫秒**降至 **91.9 毫秒**。
 
 ## 目录
 
@@ -50,9 +50,9 @@ $RunDir = "outputs/run_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 
 轨迹文件按次追加，重新采集时请使用新的输出目录。正式批次使用 Ollama 0.40.4，实际模型生成受运行环境影响，重新采集可能出现不同的工具调用或回答。
 
-## 重跑缓存计时实验
+## 复现前缀缓存对照实验
 
-下面的命令使用 Ollama 自带的 llama-server 和 CUDA 12 后端。先退出占用显存的本地模型，再从项目目录执行。程序会自行启动和关闭测试服务。
+以下命令使用 Ollama 随附的 llama-server 和 CUDA 12 后端。按实际安装路径设置可执行文件及后端库位置，并在运行前释放其他本地模型占用的显存。脚本负责启动和关闭测试服务。
 
 ```powershell
 $Py = '.\.venv\Scripts\python.exe'
@@ -68,14 +68,14 @@ $Bench = @(
 & $Py -m prefixcache_lab.benchmark_latency @Bench
 ```
 
-## 怎么看实验文件
+## 数据文件说明
 
-| 想看什么 | 对应文件 |
+| 数据内容 | 对应文件 |
 | --- | --- |
-| 模型每次收到什么、返回什么 | [调用轨迹](outputs/final_experiment_v2/traces/calls.jsonl) |
-| 每道题有没有用工具、最后答了什么 | [任务结果](outputs/final_experiment_v2/traces/runs.jsonl) |
-| 系统提示、工具说明等各占多少 | [每次调用的分段明细](outputs/final_experiment_v2/tables/prompt_call_metrics.csv) |
-| 同一段内容重复了几次、相隔多久 | [片段复用统计](outputs/final_experiment_v2/tables/segment_reuse_statistics.csv) |
-| 缓存容量变化后，能多复用多少 | [缓存容量对比](outputs/final_experiment_v2/tables/lru_capacity_comparison.csv) |
+| 各次调用的输入消息、工具说明与响应 | [调用轨迹](outputs/final_experiment_v2/traces/calls.jsonl) |
+| 工具调用过程与任务结果 | [任务运行记录](outputs/final_experiment_v2/traces/runs.jsonl) |
+| 各类 Prompt 的 Token 数、占比与公共前缀长度 | [分段统计明细](outputs/final_experiment_v2/tables/prompt_call_metrics.csv) |
+| 片段复用次数、间隔与生命周期 | [片段复用统计](outputs/final_experiment_v2/tables/segment_reuse_statistics.csv) |
+| 不同缓存容量下的命中率与复用量 | [缓存容量对比](outputs/final_experiment_v2/tables/lru_capacity_comparison.csv) |
 
-代码里的 `run_experiment.py` 负责出题和调用模型，`tracing.py` 负责记录，`analyze.py` 和 `cache_sim.py` 用记录算出表格和图。算法的计算口径和参考资料见[结题报告](结题报告.md)。
+`run_experiment.py` 执行任务，`tracing.py` 采集模型调用轨迹，`analyze.py` 和 `cache_sim.py` 负责统计、缓存模拟和结果输出。指标定义与实验条件见[技术报告](结题报告.md)。
